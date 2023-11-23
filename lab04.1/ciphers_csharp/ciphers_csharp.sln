@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34024.191
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ciphers_csharp", "ciphers_csharp.csproj", "{DE99CEBB-FB65-4721-9333-02BBA9B508CE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DE99CEBB-FB65-4721-9333-02BBA9B508CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE99CEBB-FB65-4721-9333-02BBA9B508CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE99CEBB-FB65-4721-9333-02BBA9B508CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE99CEBB-FB65-4721-9333-02BBA9B508CE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {72292E36-97D6-4A99-80EA-D5CC16167A69}
+	EndGlobalSection
+EndGlobal
