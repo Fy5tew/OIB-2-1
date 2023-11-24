@@ -1,103 +1,134 @@
-﻿using System.Net.Security;
+﻿using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
-namespace lab08_1 {
-    internal class Program {
-        static void Main(string[] args) {
-            string filePath = @"D:\Study\2c1s\ОИБ\lab08\lab08\lab08.1\Files";
-            string surname = "Турчинович";
+public class Program {
+    public static void Main() {
+        string labPath = @"D:\Study\2c1s\ОИБ\lab08\lab08\lab08.2\Files";
+        // Ваша фамилия
+        string surname = "Турчинович";
 
-            Console.WriteLine($"[Инициализация] Исходный текст: {surname}");
-            Console.WriteLine();
+        // Создание RSA с 2048 битами
+        using (var rsa = new RSACryptoServiceProvider(2048)) {
+            // Получение ключей
+            var publicKey = rsa.ExportParameters(false);
+            var privateKey = rsa.ExportParameters(true);
 
-            //      ШИФРОВАНИЕ
-            // Создание AES провайдера
-            using (var aes192 = Aes.Create()) {
-                // Установка параметров
-                aes192.KeySize = 192;
-                aes192.GenerateKey();
-                aes192.GenerateIV();
+            // Сохранение ключей в файлы
+            File.WriteAllText(Path.Combine(labPath, "publicKey.txt"), Convert.ToBase64String(publicKey.Modulus));
+            File.WriteAllText(Path.Combine(labPath, "privateKey.txt"), Convert.ToBase64String(privateKey.Modulus));
 
-                // Получение ключей
-                var aes192Key = Convert.ToBase64String(aes192.Key);
-                var aes192IV = Convert.ToBase64String(aes192.IV);
+            // Шифрование
+            var bytesToEncrypt = Encoding.UTF8.GetBytes(surname);
+            var encryptedBytes = rsa.Encrypt(bytesToEncrypt, false);
+            var encryptedData = Convert.ToBase64String(encryptedBytes);
 
-                // Шифрование
-                var bytesToEncrypt = Encoding.UTF8.GetBytes(surname);
-                byte[] encryptedBytes;
-                using (var aes192Encryptor = aes192.CreateEncryptor(aes192.Key, aes192.IV)) {
-                    encryptedBytes = aes192Encryptor.TransformFinalBlock(bytesToEncrypt, 0, bytesToEncrypt.Length);
-                }
-                var encryptedData = Convert.ToBase64String(encryptedBytes);
+            // Сохранение зашифрованных данных в файл
+            File.WriteAllText(Path.Combine(labPath, "encryptedData.txt"), encryptedData);
 
-                // Запись данных в файл
-                File.WriteAllText(Path.Combine(filePath, "aes192Key.txt"), aes192Key);
-                File.WriteAllText(Path.Combine(filePath, "aes192IV.txt"), aes192IV);
-                File.WriteAllText(Path.Combine(filePath, "encryptedData.txt"), encryptedData);
+            // Дешифрование
+            var bytesToDecrypt = Convert.FromBase64String(encryptedData);
+            var decryptedBytes = rsa.Decrypt(bytesToDecrypt, false);
+            var decryptedData = Encoding.UTF8.GetString(decryptedBytes);
 
-                // Вывод данных в консоль
-                Console.WriteLine($"[Шифрование] Ключ: {aes192Key}");
-                Console.WriteLine($"[Шифрование] Вектор: {aes192IV}");
-                Console.WriteLine($"[Шифрование] Зашифрованный текст: {encryptedData}");
-                Console.WriteLine();
-            }
+            // Проверка, что дешифрованные данные совпадают с исходными
+            Console.WriteLine("Decryption successful: " + (surname == decryptedData));
+            Console.WriteLine("Encrypted Data: " + encryptedData);
 
-            //      ДЕШИФРОВАНИЕ
-            // Создание AES провайдера
-            using (var aes192 = Aes.Create()) {
-                // Чтение данных
-                var aes192Key = File.ReadAllText(Path.Combine(filePath, "aes192Key.txt"));
-                var aes192IV = File.ReadAllText(Path.Combine(filePath, "aes192IV.txt"));
-                var encryptedData = File.ReadAllText(Path.Combine(filePath, "encryptedData.txt"));
-
-                // Установка параметров
-                aes192.KeySize = 192;
-                aes192.Key = Convert.FromBase64String(aes192Key);
-                aes192.IV = Convert.FromBase64String(aes192IV);
-
-                // Дешифрование
-                var encryptedBytes = Convert.FromBase64String(encryptedData);
-                byte[] decryptedBytes;
-                using (var aes192Decryptor = aes192.CreateDecryptor(aes192.Key, aes192.IV)) {
-                    decryptedBytes = aes192Decryptor.TransformFinalBlock(encryptedBytes, 0, encryptedBytes.Length);
-                }
-                var decryptedData = Encoding.UTF8.GetString(decryptedBytes);
-
-                // Вывод данных в консоль
-                Console.WriteLine($"[Дешифрование] Ключ: {aes192Key}");
-                Console.WriteLine($"[Дешифрование] Вектор: {aes192IV}");
-                Console.WriteLine($"[Дешифрование] Зашифрованный текст: {encryptedData}");
-                Console.WriteLine($"[Дешифрование] Расшифрованный текст: {decryptedData}");
-                Console.WriteLine();
-            }
-
-            //      ХЕШИРОВАНИЕ
             // Создание SHA провайдера
             using (var sha384 = SHA384.Create()) {
-                // Хеширование
                 var bytes = Encoding.UTF8.GetBytes(surname);
-                var hashBytes = sha384.ComputeHash(bytes);
-                var hash = Convert.ToBase64String(hashBytes);
+                var hashedBytes = sha384.ComputeHash(bytes);
+                var hashStr = BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
 
-                // Запись данных в файл
-                File.WriteAllText(Path.Combine(filePath, "hash.txt"), hash);
+                // Сохранение хеша в файл
+                File.WriteAllText(Path.Combine(labPath, "hash.txt"), hashStr);
 
-                // Вывод в консоль
-                Console.WriteLine($"[Хеширование] Хеш: {hash}");
-                Console.WriteLine();
+                Console.WriteLine("Hash: " + hashStr);
             }
 
-            using (var aes192 = Aes.Create()) {
-                var aes192Key = File.ReadAllText(Path.Combine(filePath, "aes192Key.txt"));
-                var aes192IV = File.ReadAllText(Path.Combine(filePath, "aes192IV.txt"));
-                var encryptedData = File.ReadAllText(Path.Combine(filePath, "encryptedData.txt"));
 
-                // Установка параметров
-                aes192.KeySize = 192;
-                aes192.Key = Convert.FromBase64String(aes192Key);
-                aes192.IV = Convert.FromBase64String(aes192IV);
-            }
+            // Создание цифровой подписи
+
+            // Импорт закрытого ключа
+            rsa.ImportParameters(privateKey);
+
+            // Чтение хеша из файла
+            var hash = File.ReadAllText(Path.Combine(labPath, "hash.txt"));
+
+            // Преобразование хеша в байты
+            var hashBytes = Enumerable.Range(0, hash.Length / 2)
+                .Select(x => Convert.ToByte(hash.Substring(x * 2, 2), 16))
+                .ToArray();
+
+            // Создание подписи на основе хеша
+            var signature = rsa.SignHash(hashBytes, CryptoConfig.MapNameToOID("SHA384"));
+
+            // Сохранение подписи в файл
+            File.WriteAllText(Path.Combine(labPath, "signature.txt"), Convert.ToBase64String(signature));
+
+            // Вывод подписи в консоль
+            Console.WriteLine("Signature: " + Convert.ToBase64String(signature));
+
+
+            // Проверка цифровой подписи
+
+            // Импорт открытого ключа
+            rsa.ImportParameters(publicKey);
+
+
+
+            // Проверка подписи на основе хеша
+            var isValid = rsa.VerifyHash(hashBytes, CryptoConfig.MapNameToOID("SHA384"), signature);
+
+            // Вывод результата проверки в консоль
+            Console.WriteLine("Signature is valid: " + isValid);
+
+
+            // Демонстрация изменения хеша или сообщения
+
+            // Импорт открытого ключа
+            rsa.ImportParameters(publicKey);
+
+            // Чтение хеша из файла
+
+
+
+            // Изменение одного байта в хеше
+            hashBytes[0] ^= 1;
+
+
+            // Вывод результата проверки в консоль
+            Console.WriteLine("Signature is valid after hash change: " + isValid);
+
+            // Восстановление исходного хеша
+            hashBytes[0] ^= 1;
+
+            // Изменение одного байта в подписи
+            signature[0] ^= 1;
+
+            // Проверка подписи на основе измененной подписи
+            isValid = rsa.VerifyHash(hashBytes, CryptoConfig.MapNameToOID("SHA384"), signature);
+
+            // Вывод результата проверки в консоль
+            Console.WriteLine("Signature is valid after signature change: " + isValid);
+
+
+        }
+
+        // Хеширование SHA512
+        using (var sha512 = SHA512.Create()) {
+            var bytes = Encoding.UTF8.GetBytes(surname);
+            var hashBytes = sha512.ComputeHash(bytes);
+            var hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+
+            // Сохранение хеша в файл
+            File.WriteAllText(Path.Combine(labPath, "hash.txt"), hash);
+
+            Console.WriteLine("Hash: " + hash);
         }
     }
 }
